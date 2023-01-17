@@ -13,6 +13,9 @@ const playGameButtonElem = document.getElementById("playGame");
 
 const cardContainerElem = document.querySelector(".card-container");
 
+const collapsedGridAreaTemplate = '"a a" "a a"';
+const cardCollectionCellClass = ".card-pos-a";
+
 /* <div class="card">
 <div class="card-inner">
   <div class="card-front">
@@ -42,9 +45,45 @@ function initalizeNewGame() {}
 
 function startRound() {
   initalizeNewRound();
+  collectCards();
+  flipCards(true);
 }
 
 function initalizeNewRound() {}
+
+function collectCards() {
+  transformGridArea(collapsedGridAreaTemplate);
+  addCardsToGridAreaCell(cardCollectionCellClass);
+}
+
+function transformGridArea(areas) {
+  cardContainerElem.style.gridTemplateAreas = areas;
+}
+
+function addCardsToGridAreaCell(cellPositionClassName) {
+  const cellPositionElem = document.querySelector(cellPositionClassName);
+
+  cards.forEach((card, index) => {
+    addChildElement(cellPositionElem, card);
+  });
+}
+
+function flipCard(card, flipToBack) {
+  const innerCardElem = card.firstChild;
+  if (flipToBack && !innerCardElem.classList.contains("flip-it")) {
+    innerCardElem.classList.add("flip-it");
+  } else if (innerCardElem.classList.contains("flip-it")) {
+    innerCardElem.classList.remove("flip-it");
+  }
+}
+
+function flipCards(flipToBack) {
+  cards.forEach((card, index) => {
+    setTimeout(() => {
+      flipCard(card, flipToBack);
+    }, index * 100);
+  });
+}
 
 function createCards() {
   cardObjectDefinitions.forEach((cardItem) => {
