@@ -5,6 +5,8 @@ const cardObjectDefinitions = [
   { id: 4, imagePath: "/images/card-AceSpades.png" },
 ];
 
+const aceID = 4;
+
 const cardBackImgPath = "/images/card-back-blue.png";
 
 let cards = [];
@@ -13,12 +15,32 @@ const playGameButtonElem = document.getElementById("playGame");
 
 const cardContainerElem = document.querySelector(".card-container");
 
-const collapsedGridAreaTemplate = '"a a" "a a"';
+const collapsedGridAreaTemplate = '"a b" "c d"';
 const cardCollectionCellClass = ".card-pos-a";
 
 const numCards = cardObjectDefinitions.length;
 
 let cardPositions = [];
+
+let gameInProgess = false;
+let shufflingInProgress = false;
+let cardsRevealed = false;
+
+// updateStatusElement(
+//   currentgameStatusElem,
+//   "block",
+//   winColor,
+//   "Hit!! - Well Done!! :)"
+// );
+
+const currentgameStatusElem = document.querySelector(".current-status");
+
+const winColor = "green";
+const loseColor = "red";
+
+let roundNum = 0;
+let maxRounds = 4;
+let score = 0;
 
 /* <div class="card">
 <div class="card-inner">
@@ -31,6 +53,73 @@ let cardPositions = [];
 </div>
 </div>
 */
+
+function chooseCard(card) {
+  if (canChooseCard()) {
+    evalCardChoice(card);
+  }
+}
+
+function calculateScoreToAdd(roundNum) {
+  if (roundNum == 1) {
+    return 100;
+  } else if (roundNum == 2) {
+    return 50;
+  } else if (roundNum == 3) {
+    return 25;
+  } else {
+    return 10;
+  }
+}
+
+function calculateScore() {
+  const scoreToAdd = calculateScoreToAdd(roundNum);
+  score = score + scoreToAdd;
+}
+
+function updateScore() {
+  calculateScore();
+}
+
+function updateStatusElement(elem, display, color, innerHTML) {
+  elem.style.display = display;
+  if (arguments.length > 2) {
+    elem.style.color = color;
+    elem.innerHTML = innerHTML;
+  }
+}
+
+function outputChoiceFeedback(hit) {
+  if (hit) {
+    updateStatusElement(
+      currentgameStatusElem,
+      "block",
+      winColor,
+      "Hit!! - Well Done!! :)"
+    );
+  } else {
+    updateStatusElement(
+      currentgameStatusElem,
+      "block",
+      loseColor,
+      "Missed!! :("
+    );
+  }
+}
+
+function evalCardChoice(card) {
+  if (card.id == aceID) {
+    updateScore();
+    outputChoiceFeedback(true);
+  } else {
+    outputChoiceFeedback(false);
+  }
+}
+
+function canChooseCard() {
+  return gameInProgess == true && !shufflingInProgress && !cardsRevealed;
+}
+
 loadGame();
 function loadGame() {
   createCards();
@@ -45,12 +134,18 @@ function startGame() {
   startRound();
 }
 
-function initalizeNewGame() {}
+function initalizeNewGame() {
+  score = 0;
+  roundNum = 0;
+
+  shufflingInProgress = false;
+}
 
 function startRound() {
   initalizeNewRound();
   collectCards();
-  flipCards(true);
+  //   flipCards(true);
+  shuffleCards();
 }
 
 function initalizeNewRound() {}
@@ -97,6 +192,7 @@ function shuffleCards() {
     randomizeCardPositions();
     if (shuffleCount == 500) {
       clearInterval(id);
+      dealCards();
     } else {
       shuffleCount++;
     }
@@ -110,6 +206,44 @@ function randomizeCardPositions() {
 
   cardPositions[random1 - 1] = cardPositions[random2 - 1];
   cardPositions[random2 - 1] = temp;
+}
+
+function dealCards() {
+  addCardsToAppropriateCell();
+  const areasTemplate = returnGridAreasMappedToCardPos();
+
+  transformGridArea(areasTemplate);
+}
+
+function returnGridAreasMappedToCardPos() {
+  let firstPart = "";
+  let secondPart = "";
+  let areas = "";
+
+  cards.forEach((card, index) => {
+    if (cardPositions[index] == 1) {
+      areas = areas + "a ";
+    } else if (cardPositions[index] == 2) {
+      areas = areas + "b ";
+    } else if (cardPositions[index] == 3) {
+      areas = areas + "c ";
+    } else if (cardPositions[index] == 4) {
+      areas = areas + "d ";
+    }
+    if (index == 1) {
+      firstPart = areas.substring(0, areas.length - 1);
+      areas = "";
+    } else if (index == 3) {
+      secondPart = areas.substring(0, areas.length - 1);
+    }
+    return `"${firstPart}" "${secondPart}"`;
+  });
+}
+
+function addCardsToAppropriateCell() {
+  cards.forEach((card) => {
+    addCardToGridCell(card);
+  });
 }
 
 function createCards() {
